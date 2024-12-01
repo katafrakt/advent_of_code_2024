@@ -1,13 +1,14 @@
-import gleam/io
-import gleam/string
-import gleam/dict
 import argv
 import clip
 import clip/arg
 import clip/flag
+import gleam/dict
+import gleam/io
+import gleam/string
 import simplifile
 
 import day00/solution as day00
+import day01/solution as day01
 
 type Context {
   Context(day: String, is_test: Bool)
@@ -25,10 +26,8 @@ fn command() {
 }
 
 fn run_solution(ctx: Context) {
-  let solution_fns = dict.from_list([
-    #("00", day00.run)
-  ])
-  
+  let solution_fns = dict.from_list([#("00", day00.run), #("01", day01.run)])
+
   let fname = case ctx.is_test {
     True -> "src/day" |> string.append(ctx.day) |> string.append("/test")
     False -> "src/day" |> string.append(ctx.day) |> string.append("/input")
@@ -36,10 +35,11 @@ fn run_solution(ctx: Context) {
 
   case simplifile.read(fname) {
     Error(_) -> panic as "File not found"
-    Ok(body) -> case dict.get(solution_fns, ctx.day) {
-      Error(_) -> panic as "Day not added to solution_fns"
-      Ok(fun) -> fun(body)
-    }
+    Ok(body) ->
+      case dict.get(solution_fns, ctx.day) {
+        Error(_) -> panic as "Day not added to solution_fns"
+        Ok(fun) -> fun(body)
+      }
   }
 }
 
