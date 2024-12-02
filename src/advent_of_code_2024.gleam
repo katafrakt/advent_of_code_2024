@@ -9,6 +9,7 @@ import simplifile
 
 import day00/solution as day00
 import day01/solution as day01
+import day02/solution as day02
 
 type Context {
   Context(day: String, is_test: Bool)
@@ -26,7 +27,8 @@ fn command() {
 }
 
 fn run_solution(ctx: Context) {
-  let solution_fns = dict.from_list([#("00", day00.run), #("01", day01.run)])
+  let solution_fns =
+    dict.from_list([#("00", day00.run), #("01", day01.run), #("02", day02.run)])
 
   let fname = case ctx.is_test {
     True -> "src/day" |> string.append(ctx.day) |> string.append("/test")

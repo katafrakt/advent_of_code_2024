@@ -2,13 +2,7 @@ import gleam/int
 import gleam/io
 import gleam/list
 import gleam/string
-
-fn str_to_int(s: String) -> Int {
-  case int.parse(s) {
-    Ok(i) -> i
-    Error(_) -> panic as "Invalid input"
-  }
-}
+import utils/utils
 
 fn into_lists(elems, list1, list2) {
   case elems {
@@ -55,7 +49,7 @@ pub fn run(input: String) {
     |> list.map(fn(line) {
       string.split(line, " ")
       |> list.filter(fn(x) { x != "" })
-      |> list.map(fn(x) { x |> str_to_int() })
+      |> list.map(fn(x) { utils.str_to_int(x) })
     })
     |> into_lists([], [])
 
