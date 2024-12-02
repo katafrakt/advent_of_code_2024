@@ -5,57 +5,55 @@ import gleam/order.{Eq, Gt, Lt}
 import gleam/string
 import utils/utils
 
+type Report =
+  List(Int)
+
 type ListType {
-  UnknownList(List(Int))
-  IncreasingList(List(Int))
-  DescresingList(List(Int))
+  UnknownList(Report)
+  IncreasingList(Report)
+  DecreasingList(Report)
   InvalidList
 }
 
-fn last(list) {
-  case list.last(list) {
-    Ok(el) -> el
-    Error(_) -> panic as "Empty list"
+fn process_element(list, element) {
+  case list {
+    InvalidList -> InvalidList
+    UnknownList([]) -> UnknownList([element])
+    UnknownList([hd, ..rest]) -> {
+      case int.compare(element, hd) {
+        Lt -> {
+          case hd - element <= 3 {
+            True -> DecreasingList([element, ..[hd, ..rest]])
+            False -> InvalidList
+          }
+        }
+        Gt -> {
+          case element - hd <= 3 {
+            True -> IncreasingList([element, ..[hd, ..rest]])
+            False -> InvalidList
+          }
+        }
+        Eq -> InvalidList
+      }
+    }
+    DecreasingList([hd, ..rest]) -> {
+      case hd > element && hd - element <= 3 {
+        True -> DecreasingList([element, ..[hd, ..rest]])
+        False -> InvalidList
+      }
+    }
+    IncreasingList([hd, ..rest]) -> {
+      case hd < element && element - hd <= 3 {
+        True -> IncreasingList([element, ..[hd, ..rest]])
+        False -> InvalidList
+      }
+    }
+    _ -> panic as "Invalid list"
   }
 }
 
 fn is_valid(list) {
-  let result =
-    list.fold(list, UnknownList([]), fn(acc, elem) {
-      case acc {
-        InvalidList -> InvalidList
-        UnknownList([]) -> UnknownList([elem])
-        UnknownList(lst) -> {
-          case int.compare(elem, last(lst)) {
-            Lt -> {
-              case last(lst) - elem <= 3 {
-                True -> DescresingList(list.append(lst, [elem]))
-                False -> InvalidList
-              }
-            }
-            Gt -> {
-              case elem - last(lst) <= 3 {
-                True -> IncreasingList(list.append(lst, [elem]))
-                False -> InvalidList
-              }
-            }
-            Eq -> InvalidList
-          }
-        }
-        DescresingList(lst) -> {
-          case last(lst) > elem && last(lst) - elem <= 3 {
-            True -> DescresingList(list.append(lst, [elem]))
-            False -> InvalidList
-          }
-        }
-        IncreasingList(lst) -> {
-          case last(lst) < elem && elem - last(lst) <= 3 {
-            True -> IncreasingList(list.append(lst, [elem]))
-            False -> InvalidList
-          }
-        }
-      }
-    })
+  let result = list.fold(list, UnknownList([]), process_element)
 
   case result {
     InvalidList -> False
@@ -65,7 +63,7 @@ fn is_valid(list) {
 }
 
 pub fn run(input: String) {
-  let lists =
+  let reports =
     input
     |> string.split("\n")
     |> list.map(fn(line) {
@@ -73,17 +71,19 @@ pub fn run(input: String) {
       |> list.map(fn(x) { utils.str_to_int(x) })
     })
 
-  lists
+  // part 1
+  reports
   |> list.count(fn(x) { is_valid(x) })
   |> io.debug
 
-  lists
+  // part 2
+  reports
   |> list.count(fn(x) {
     case is_valid(x) {
       True -> True
       False -> {
         list.combinations(x, list.length(x) - 1)
-        |> list.any(fn(y) { is_valid(y) })
+        |> list.any(is_valid)
       }
     }
   })
