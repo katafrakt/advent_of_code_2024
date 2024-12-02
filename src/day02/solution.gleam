@@ -77,5 +77,17 @@ pub fn run(input: String) {
   |> list.count(fn(x) { is_valid(x) })
   |> io.debug
 
+  lists
+  |> list.count(fn(x) {
+    case is_valid(x) {
+      True -> True
+      False -> {
+        list.combinations(x, list.length(x) - 1)
+        |> list.any(fn(y) { is_valid(y) })
+      }
+    }
+  })
+  |> io.debug
+
   Nil
 }
