@@ -89,13 +89,7 @@ pub fn run(input) {
         |> string.to_graphemes()
         |> list.fold(#(0, acc), fn(acc2, letter) {
           let #(x, acc2) = acc2
-          let list = case letter {
-            "X" -> list.prepend(acc2, #(#(x, y), "X"))
-            "M" -> list.prepend(acc2, #(#(x, y), "M"))
-            "A" -> list.prepend(acc2, #(#(x, y), "A"))
-            "S" -> list.prepend(acc2, #(#(x, y), "S"))
-            _ -> acc2
-          }
+          let list = list.prepend(acc2, #(#(x, y), letter))
           #(x + 1, list)
         })
 
