@@ -1,13 +1,12 @@
 import gleam/io
 import gleam/list
 import gleam/option.{type Option, None, Some}
-import gleam/result
 import gleam/string
 
 type Position =
   #(Int, Int)
 
-type Letter =
+type Item =
   #(Position, String)
 
 fn mult_position(position: Position, number: Int) -> Position {
@@ -25,10 +24,10 @@ fn directions() {
   [#(0, 1), #(0, -1), #(1, 1), #(1, 0), #(1, -1), #(-1, 0), #(-1, 1), #(-1, -1)]
 }
 
-fn get_letter(list: List(Letter), pos: Position) -> Option(String) {
+fn get_letter(list: List(Item), pos: Position) -> Option(String) {
   case
     list.find(list, fn(item) {
-      let #(pos1, letter) = item
+      let #(pos1, _) = item
       pos1 == pos
     })
   {
@@ -40,13 +39,14 @@ fn get_letter(list: List(Letter), pos: Position) -> Option(String) {
   }
 }
 
-fn is_x(letter: Letter) -> Bool {
-  let #(_, l) = letter
-  l == "X"
+fn is_letter(item: Item, letter: String) -> Bool {
+  let #(_, l) = item
+  l == letter
 }
 
-fn find_xmases(letters: List(Letter), letter: Letter) -> Int {
-  let #(pos, _) = letter
+fn find_xmases(letters: List(Item), item: Item) -> Int {
+  let #(pos, _) = item
+
   directions()
   |> list.count(fn(dir) {
     get_letter(letters, add_position(pos, dir)) == Some("M")
@@ -57,8 +57,27 @@ fn find_xmases(letters: List(Letter), letter: Letter) -> Int {
   })
 }
 
+fn find_x_mases(letters: List(Item), item: Item) -> Int {
+  let #(pos, _) = item
+  let is_tr_dl = case get_letter(letters, add_position(pos, #(-1, -1))) {
+    Some("M") -> get_letter(letters, add_position(pos, #(1, 1))) == Some("S")
+    Some("S") -> get_letter(letters, add_position(pos, #(1, 1))) == Some("M")
+  _ -> False
+  }
+  let is_tl_dr = case get_letter(letters, add_position(pos, #(-1, 1))) {
+    Some("M") -> get_letter(letters, add_position(pos, #(1, -1))) == Some("S")
+    Some("S") -> get_letter(letters, add_position(pos, #(1, -1))) == Some("M")
+  _ -> False
+  }
+
+  case is_tr_dl && is_tl_dr {
+    True -> 1
+    False -> 0
+  }
+}
+
 pub fn run(input) {
-  let empty_list: List(Letter) = []
+  let empty_list: List(Item) = []
 
   let #(_, letters) =
     input
@@ -83,11 +102,16 @@ pub fn run(input) {
       #(y + 1, result)
     })
 
-//  list.each(letters, io.debug)
-
+  // part 1
   letters
-  |> list.filter(is_x)
+  |> list.filter(fn(i) { is_letter(i, "X") })
   |> list.fold(0, fn(acc, item) { acc + find_xmases(letters, item) })
+  |> io.debug()
+
+  // part 2
+  letters
+  |> list.filter(fn(i) { is_letter(i, "A") })
+  |> list.fold(0, fn(acc, item) { acc + find_x_mases(letters, item) })
   |> io.debug()
 
   Nil
