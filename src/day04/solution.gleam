@@ -7,9 +7,6 @@ import gleam/string
 type Position =
   #(Int, Int)
 
-type Item =
-  #(Position, String)
-
 fn mult_position(position: Position, number: Int) -> Position {
   let #(x, y) = position
   #(x * number, y * number)
