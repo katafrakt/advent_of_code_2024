@@ -10,10 +10,10 @@ pub fn str_to_int(s: String) -> Int {
   }
 }
 
-pub fn list_at(input, x) {
+pub fn list_at(lst: List(a), index: Int) -> a {
   let val =
-    list.index_map(input, fn(v, i) {
-      case i == x {
+    list.index_map(lst, fn(v, i) {
+      case i == index {
         True -> Some(v)
         False -> None
       }
@@ -21,14 +21,14 @@ pub fn list_at(input, x) {
     |> list.find(option.is_some)
 
   case val {
-    Ok(i) -> i
+    Ok(Some(i)) -> i
     _ -> panic as "No value at index #{i}"
   }
 }
 
-pub fn list_remove(l, elem) {
-  case list.split_while(l, fn(x) { x != elem }) {
-    #(l1, [_, ..l2]) -> list.append(l1, l2)
-    _ -> l
+pub fn list_remove(lst: List(a), elem: a) -> List(a) {
+  case list.split_while(lst, fn(x) { x != elem }) {
+    #(sublist1, [_, ..sublist2]) -> list.append(sublist1, sublist2)
+    _ -> lst
   }
 }

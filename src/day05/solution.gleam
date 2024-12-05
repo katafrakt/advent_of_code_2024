@@ -109,23 +109,9 @@ fn do_fix_input(input: Input, dependencies) {
   }
 }
 
-fn mid_element(lst) {
+fn mid_element(lst: List(Int)) -> Int {
   let len = list.length(lst) - 1
-
-  let val =
-    lst
-    |> list.index_map(fn(v, i) {
-      case i == len / 2 {
-        True -> v
-        False -> -1
-      }
-    })
-    |> list.find(fn(x) { x > 0 })
-
-  case val {
-    Ok(i) -> i
-    _ -> panic as "No middle value"
-  }
+  utils.list_at(lst, len / 2)
 }
 
 pub fn run(input) {
