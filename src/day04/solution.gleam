@@ -3,20 +3,7 @@ import gleam/io
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/string
-
-type Position =
-  #(Int, Int)
-
-fn mult_position(position: Position, number: Int) -> Position {
-  let #(x, y) = position
-  #(x * number, y * number)
-}
-
-fn add_position(position1: Position, position2: Position) -> Position {
-  let #(x1, y1) = position1
-  let #(x2, y2) = position2
-  #(x1 + x2, y1 + y2)
-}
+import utils/position.{type Position, add_position, mult_position}
 
 fn directions() {
   [#(0, 1), #(0, -1), #(1, 1), #(1, 0), #(1, -1), #(-1, 0), #(-1, 1), #(-1, -1)]
