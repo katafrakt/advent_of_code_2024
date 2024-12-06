@@ -145,20 +145,62 @@ fn turn(dir) {
   }
 }
 
+fn free_positions(lab: Lab) -> List(Position) {
+  do_free_positions(lab, [], 0, 0)
+}
+
+fn do_free_positions(
+  lab: Lab,
+  free: List(Position),
+  x: Int,
+  y: Int,
+) -> List(Position) {
+  let pos = #(x, y)
+  let new_free = case
+    is_obstacle(lab, pos) || pos == lab.guard_position.position
+  {
+    True -> free
+    False -> [pos, ..free]
+  }
+
+  case x + 1 >= lab.width {
+    True -> {
+      case y + 1 >= lab.height {
+        True -> new_free
+        False -> do_free_positions(lab, new_free, 0, y + 1)
+      }
+    }
+    False -> do_free_positions(lab, new_free, x + 1, y)
+  }
+}
+
 pub fn run(input) {
-  let lab = build_lab(input)
-  let lab = case keep_moving_guard(lab) {
+  let original_lab = build_lab(input)
+  let lab = case keep_moving_guard(original_lab) {
     LeftLab(lab) -> lab
     _ -> panic as "Guard looped"
   }
 
-  let positions =
+  // part 1
+  let visited_positions =
     lab.past_positions
     |> list.map(fn(gp) { gp.position })
     |> list.unique()
-    |> list.length()
+
   // last position is outside of lab
-  io.debug(positions - 1)
+  io.debug(list.length(visited_positions) - 1)
+
+  // part 2
+  free_positions(original_lab)
+  |> list.filter(fn(pos) { list.contains(visited_positions, pos) })
+  |> list.count(fn(pos) {
+    let lab = add_obstacle(original_lab, pos)
+    case keep_moving_guard(lab) {
+      Loop(_) -> True
+      _ -> False
+    }
+  })
+  |> io.debug()
 
   Nil
 }
