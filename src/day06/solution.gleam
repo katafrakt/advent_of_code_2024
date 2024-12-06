@@ -19,15 +19,24 @@ fn direction_to_position(dir) {
   }
 }
 
+type GuardPosition {
+  GuardPosition(position: Position, direction: Direction)
+}
+
 type Lab {
   Lab(
     width: Int,
     height: Int,
     obstacles: List(Position),
-    guard_position: Position,
+    guard_position: GuardPosition,
     guard_direction: Direction,
-    visited_positions: List(Position),
+    past_positions: List(GuardPosition),
   )
+}
+
+type MovingEnd {
+  LeftLab(Lab)
+  Loop(Lab)
 }
 
 fn build_lab(input) {
@@ -37,9 +46,9 @@ fn build_lab(input) {
       width: 0,
       height: list.length(lines),
       obstacles: [],
-      guard_position: #(0, 0),
+      guard_position: GuardPosition(#(0, 0), Up),
       guard_direction: Up,
-      visited_positions: [],
+      past_positions: [],
     )
 
   let #(_, lab) =
@@ -69,19 +78,30 @@ fn add_obstacle(lab, position) {
   Lab(..lab, obstacles: [position, ..lab.obstacles])
 }
 
-fn put_guard(lab, position) {
-  Lab(..lab, guard_position: position, visited_positions: [position])
+fn put_guard(lab: Lab, position: Position) -> Lab {
+  let guard_pos = GuardPosition(position, lab.guard_direction)
+  Lab(..lab, guard_position: guard_pos, past_positions: [guard_pos])
 }
 
-fn keep_moving_guard(lab) {
+fn keep_moving_guard(lab: Lab) -> MovingEnd {
   let lab = move_guard(lab)
-  let #(guard_x, guard_y) = lab.guard_position
+  let #(guard_x, guard_y) = lab.guard_position.position
+
+  let positions_to_check = case lab.past_positions {
+    [_, ..tail] -> tail
+    [] -> []
+  }
 
   case
     guard_x >= lab.width || guard_x < 0 || guard_y >= lab.height || guard_y < 0
   {
-    True -> lab
-    False -> keep_moving_guard(lab)
+    True -> LeftLab(lab)
+    False -> {
+      case list.contains(positions_to_check, lab.guard_position) {
+        True -> Loop(lab)
+        False -> keep_moving_guard(lab)
+      }
+    }
   }
 }
 
@@ -92,16 +112,27 @@ fn is_obstacle(lab: Lab, position: Position) -> Bool {
 fn move_guard(lab: Lab) -> Lab {
   let candidate_pos =
     direction_to_position(lab.guard_direction)
-    |> position.add_position(lab.guard_position)
+    |> position.add_position(lab.guard_position.position)
 
   case is_obstacle(lab, candidate_pos) {
-    True -> Lab(..lab, guard_direction: turn(lab.guard_direction))
-    False ->
+    True -> {
+      let new_dir = turn(lab.guard_direction)
+      let new_pos = GuardPosition(..lab.guard_position, direction: new_dir)
       Lab(
         ..lab,
-        guard_position: candidate_pos,
-        visited_positions: [candidate_pos, ..lab.visited_positions],
+        guard_direction: turn(lab.guard_direction),
+        guard_position: new_pos,
+        past_positions: [new_pos, ..lab.past_positions],
       )
+    }
+    False -> {
+      let pos = GuardPosition(candidate_pos, lab.guard_direction)
+      Lab(
+        ..lab,
+        guard_position: pos,
+        past_positions: [pos, ..lab.past_positions],
+      )
+    }
   }
 }
 
@@ -116,10 +147,14 @@ fn turn(dir) {
 
 pub fn run(input) {
   let lab = build_lab(input)
-  let lab = keep_moving_guard(lab)
+  let lab = case keep_moving_guard(lab) {
+    LeftLab(lab) -> lab
+    _ -> panic as "Guard looped"
+  }
 
   let positions =
-    lab.visited_positions
+    lab.past_positions
+    |> list.map(fn(gp) { gp.position })
     |> list.unique()
     |> list.length()
   // last position is outside of lab
