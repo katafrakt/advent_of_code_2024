@@ -13,6 +13,7 @@ import day02/solution as day02
 import day03/solution as day03
 import day04/solution as day04
 import day05/solution as day05
+import day06/solution as day06
 
 type Context {
   Context(day: String, is_test: Bool)
@@ -38,6 +39,7 @@ fn run_solution(ctx: Context) {
       #("03", day03.run),
       #("04", day04.run),
       #("05", day05.run),
+      #("06", day06.run),
     ])
 
   let fname = case ctx.is_test {
